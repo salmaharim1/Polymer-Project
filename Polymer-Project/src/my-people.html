@@ -1,0 +1,134 @@
+
+<dom-module id="my-people">
+    <!-- Defines the element's style and local DOM -->
+    <template>
+        <style>
+             :host {
+                display: block;
+
+                padding: 16px;
+            }
+
+            paper-button.green {
+                background-color: var(--paper-blue-200);
+                color: white;
+            }
+
+            paper-button.green[active] {
+                background-color: var(--paper-grey-600);
+            }
+        </style>
+
+<template is="dom-repeat" items="{{pageArray}}" as="nbrPage">
+        <iron-ajax auto url="https://swapi.co/api/people?page={{nbrPage}}" handle-as="json" on-response="onResponseP">
+        </iron-ajax>
+    </template>
+
+    <template is="dom-if" if="[[!isTextEmpty]]">
+        
+        <iron-ajax auto url="https://swapi.co/api/people/?search={{text}}" handle-as="json" on-response="trouverP">
+        </iron-ajax>
+    </template>
+
+
+        <paper-search-input always-float-label label="search people" on-input="modierTxt" value="{{text}}"></paper-search-input>
+       
+
+
+        <h1>PEOPLE</h1>
+       
+
+    
+        <template is="dom-repeat" items="{{tabPeople}}" as="person">
+                <paper-button toggles raised class="green" on-click="knowMore">KNOW MORE</paper-button>
+                <strong>[[person.name]]</strong>
+                <br>
+                <br>
+            </template>
+    </template>
+    <pagination-input current-page="1" page-count="5"></pagination-input>
+    <script>
+
+        class MyPeople extends Polymer.Element {
+            static get is() { return 'my-people'; }
+
+            constructor() {
+                super();
+                this.tabPeople = [];
+                this.NombrePage = 9;
+                this.text = "";
+                this.isTextEmpty = true;
+                this.pageArray = [];
+
+                for (let i = 1; i <= this.NombrePage; i++)
+                    this.pageArray.push(i);
+
+                this.compteur = 0;
+            }
+
+            onResponseP(res) {
+                this.compteur++;
+
+                res.detail.response.results.forEach(function (element) {
+                    this.tabPeople.push(element);
+                }, this);
+
+
+
+                if (this.NombrePage == 9) {
+                    console.log(this.tabPeople);
+                    this.set('tabPeople', this.tabPeople.slice());
+                }
+
+
+            }
+
+            knowMore(evenement) {
+                let person = evenement.model.get('person');
+                let temp = person.url.substr(person.url.lastIndexOf('people/') + 7);
+                let id = temp.substr(0, temp.length - 1);
+                console.log(id);
+                window.history.pushState({}, null, '/person/' + id);
+                window.dispatchEvent(new CustomEvent('location-changed'));
+            }
+
+            modierTxt() {
+                if (this.text == "")
+                    this.isTextEmpty = true;
+                else
+                    this.isTextEmpty = false;
+                console.log(this.text);
+            }
+
+            trouverP(res) {
+                if (this.text == "") {
+                    this.compteur++;
+
+                    res.detail.response.results.forEach(function (element) {
+                        this.tabPeople.push(element);
+                    }, this);
+
+
+
+                    if (this.NombrePage == 9) {
+                        console.log(this.tabPeople);
+                        this.set('tabPeople', this.tabPeople.slice());
+                    }
+
+                }
+
+
+                this.tabPeople = [];
+                res.detail.response.results.forEach(function (element) {
+                    this.tabPeople.push(element);
+                    console.log(element);
+                }, this);
+                this.set('tabPeople', this.tabPeople.slice());
+            }
+
+        
+        }
+        //Now, register your new custom element so the browser can use it
+        customElements.define(MyPeople.is, MyPeople);
+    </script>
+</dom-module>

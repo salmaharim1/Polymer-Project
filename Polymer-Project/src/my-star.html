@@ -1,0 +1,136 @@
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<dom-module id="my-star">
+  
+    <template>
+        <style>
+             :host {
+                display: block;
+                padding: 16px;
+            }
+
+            paper-button.green {
+                background-color: var(--paper-blue-200);
+                color: white;
+            }
+
+            paper-button.green[active] {
+                background-color: var(--paper-grey-600);
+            }
+        </style>
+
+        <iron-ajax auto url="https://swapi.co/api/starships/{{selectedid}}"
+                 handle-as="json" 
+                 on-response="getStar">
+        </iron-ajax>
+
+        <template is="dom-if" if="[[isStarShowed]]">
+
+          <template is="dom-repeat" items="{{listIdFilm}}" as="idFilm">
+                            <iron-ajax auto url="https://swapi.co/api/films/{{idFilm}}" handle-as="json" on-response="getFilm">
+                            </iron-ajax>
+                        </template>
+                    </template>
+            
+                 
+
+        <h1>MORE DETAILS ABOUT - {{star.name}} -</h1>
+
+        <div>
+            <!-- affichage des starships avec les bouttons de details-->
+            <table style="width:100%" border="1">
+                    <tr align="center" bgcolor="#9e9b9b">
+                      <td><b> NAME</td>
+                      <td><b>MODEL</b></td> 
+                      <td><b>MANUFACTURER</b> </td>
+                      <td><b> CREDIT</b></td>
+                      <td><b>STARSHIP CLASS</b> </td>
+                      <td><b> PASSENGERS</b></td>
+                    </tr>
+                    <tr>
+                      <td>  {{star.name}}</td>
+                      <td>{{star.model}}</td>
+                      <td>{{star.manufacturer}}</td>
+                      <td>{{star.cost_in_credits}}</td>
+                     <td>{{star.starship_class}}</td>
+                     <td>{{star.passengers}}</td>
+                    </tr>
+                   
+                   
+                  </table> <br>
+            
+                  <h2>FILMS</h2>
+                  <template is="dom-repeat" items="{{listFilm}}" as="film">
+                      <p>
+                          <paper-button toggles raised class="green" on-click="knowMore">KNOW MORE</paper-button>
+                          <strong>{{film.title}}</strong>
+                      </p>
+                  </template>
+              </div>
+          </template>
+
+        
+        </div>
+    </template>
+    <script>
+        // Your new element extends the Polymer.Element base class
+        class MyStar extends Polymer.Element {
+            static get is() { return 'my-star'; }
+
+            constructor() {
+                super();
+                this.isStarShowed = false;
+                this.filmNbr = 0;
+                this.listFilm = [];
+                this.listIdFilm = [];
+                this.listUrlFilm = [];
+
+                this.compteur = 0;
+            }
+
+
+            getStar(res) {
+                console.log(res.detail.response);
+                this.star = res.detail.response;
+                
+                this.listUrlFilm = res.detail.response.films;
+                this.listUrlFilm.forEach(function (element) {
+                    let temp = element.substr(element.lastIndexOf('films/') + 6);
+                    let id = temp.substr(0, temp.length - 1);
+                    this.listIdFilm.push(id);
+                }, this);
+
+                this.set('listIdFilm', this.listIdFilm.slice());
+                this.filmNbr = this.listIdFilm.length;
+
+                this.listFilm = [];
+                this.isStarShowed = true;
+            }
+
+               
+            
+
+            getFilm(res) {
+                this.compteur++;
+                let film = res.detail.response;
+                this.listFilm.push(film);
+
+
+
+                if (this.filmNbr == this.compteur) {
+                    this.set('listFilm', this.listFilm.slice());
+                    console.log(this.listFilm);
+                }
+
+            }
+            knowMore() {
+                
+                 let url = "/films/{{idFilm}}";
+                 window.location.href = url;
+             }
+         }
+        //Now, register your new custom element so the browser can use it
+        customElements.define(MyStar.is, MyStar);
+    </script>
+</dom-module>

@@ -1,0 +1,142 @@
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+
+<dom-module id="my-films">
+  
+    <template>
+        <style>
+             :host {
+                display: block;
+
+                padding: 16px;
+            }
+
+            paper-button.green {
+                background-color: var(--paper-blue-200);
+                color: white;
+            }
+
+            paper-button.green[active] {
+                background-color: var(--paper-grey-600);
+            }
+        </style>
+
+   
+
+        <template is="dom-repeat" items="{{TabPage}}" as="NombrePage">
+            <iron-ajax auto url="https://swapi.co/api/films?page={{NombrePage}}" 
+            handle-as="json"
+            on-response="onResponseF">
+            </iron-ajax>
+        </template>
+
+      
+
+
+        <template is="dom-if" if="[[!isTextEmpty]]">
+            
+            <iron-ajax auto url="https://swapi.co/api/films/?search={{text}}"
+             handle-as="json" 
+             on-response="trouverfilms">
+            </iron-ajax>
+        </template>
+
+        <paper-search-input always-float-label label="search movies" on-input="modiertxt" value="{{text}}"></paper-search-input>
+
+        <h1>MOVIES</h1>
+
+     
+        <template is="dom-repeat" items="{{listeF}}" as="film">
+            <paper-button toggles raised class="green" on-click="knowMore">KNOW MORE</paper-button>
+            <strong>[[film.title]]</strong>
+            <br>
+            <br>
+        </template>
+          <pagination-input current-page="1" page-count="5"></pagination-input>
+    </template>
+  
+    <script>
+     
+        class Myfilms extends Polymer.Element {
+            static get is() { return 'my-films'; }
+
+
+            constructor() {
+                super();
+                this.NumberPage = 9;
+                this.text = "";
+                this.isTextEmpty = true;
+                
+                this.TabPage = [];
+                this.listeF = [];
+               
+              
+              
+
+                for (let i = 1; i <= this.NumberPage; i++)
+                    this.TabPage.push(i);
+
+                this.compteur = 0;
+            }
+
+            onResponseF(res) {
+                this.compteur++;
+
+                res.detail.response.results.forEach(function (element) {
+                    this.listeF.push(element);
+                }, this);
+
+
+
+                if (this.NumberPage == 9) {
+                    this.set('listeF', this.listeF.slice());
+                }
+
+
+            }
+
+            modiertxt() {
+                if (this.text == "")
+                    this.isTextEmpty = true;
+                else
+                    this.isTextEmpty = false;
+                console.log(this.text);
+            }
+
+            knowMore(evenement) {
+                let film = evenement.model.get('film');
+                let x = film.url.substr(film.url.lastIndexOf('films/') + 6);
+                let id = x.substr(0, x.length - 1);
+                window.history.pushState({}, null, '/film/' + id);
+                window.dispatchEvent(new CustomEvent('location-changed'));
+            }
+
+         
+
+            trouverfilms(res) {
+                if (this.text == "") {
+                    this.compteur++;
+            res.detail.response.results.forEach(function (element) {
+                        this.listeF.push(element);
+                    }, this);
+                 if (this.NumberPage == 9) {
+                        this.set('listeF', this.listeF.slice());
+                    }
+
+                }
+                 this.listeF = [];
+                res.detail.response.results.forEach(function (element) {
+                    this.listeF.push(element);
+                    console.log(element);
+                }, this);
+                this.set('listeF', this.listeF.slice());
+            }
+
+        }
+        //Now, register your new custom element so the browser can use it
+        customElements.define(Myfilms.is, Myfilms);
+    </script>
+</dom-module>

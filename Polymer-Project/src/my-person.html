@@ -1,0 +1,129 @@
+<!-- Load the Polymer.Element base class -->
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<dom-module id="my-person">
+    <!-- Defines the element's style and local DOM -->
+    <template>
+        <style>
+             :host {
+                display: block;
+                padding: 16px;
+            }
+            paper-button.green {
+                background-color: var(--paper-blue-200);
+                color: white;
+            }
+
+            paper-button.green[active] {
+                background-color: var(--paper-grey-600);
+            }
+        </style>
+
+        <iron-ajax auto url="https://swapi.co/api/people/{{selectedid}}"
+                      handle-as="json"
+                        on-response="getPerson">
+        </iron-ajax>
+
+        <template is="dom-if" if="[[isPersonShowed]]">
+            <template is="dom-repeat" items="{{listIdFilm}}" as="idFilm">
+                <iron-ajax auto url="https://swapi.co/api/films/{{idFilm}}" 
+                            handle-as="json" 
+                 on-response="getFilm">
+                </iron-ajax>
+
+            </template>
+            
+        </template>
+
+
+        <h1>MORE DETAILS ABOUT  - {{person.name}} -</h1>
+
+        <div>
+         
+    <!-- affichage des personnes avec les bouttons de details-->    
+<table style="width:100%" border="1">
+        <tr align="center" bgcolor="#9e9b9b">
+          <td><b>NAME</b></td>
+          <td><b>GENDER</b></td> 
+          <td><b>HAIRCOLOR</b> </td>
+          <td><b>SKIN COLOR</b></td>
+          <td><b>EYESCOLOR</b> </td>
+        </tr>
+        <tr>
+          <td> {{person.name}}</td>
+          <td>{{person.gender}}</td>
+          <td>{{person.hair_color}}</td>
+          <td>{{person.skin_color}}</td>
+         <td>{{person.eye_color}}</td>
+        </tr>
+       
+       
+      </table> <br>
+
+            <h2>FILMS</h2>
+            <template is="dom-repeat" items="{{listFilm}}" as="film">
+                <p>
+                    <paper-button toggles raised class="green" on-click="knowMore">KNOW MORE</paper-button>
+                    <strong>{{film.title}}</strong>
+                </p>
+            </template>
+            
+        </div>
+    </template>
+    <script>
+      
+        class MyPerson extends Polymer.Element {
+            static get is() { return 'my-person'; }
+
+            constructor() {
+                super();
+                this.isPersonShowed = false;
+                this.filmNbr = 0;
+                this.listFilm = [];
+                this.listIdFilm = [];
+                this.listUrlFilm = [];
+
+                this.compteur = 0;
+            }
+
+
+            getPerson(res) {
+                this.person = res.detail.response;
+                this.listUrlFilm = res.detail.response.films;
+                this.listUrlFilm.forEach(function (element) {
+                    let temp = element.substr(element.lastIndexOf('films/') + 6);
+                    let id = temp.substr(0, temp.length - 1);
+                    this.listIdFilm.push(id);
+                }, this);
+
+                this.set('listIdFilm', this.listIdFilm.slice());
+                this.filmNbr = this.listIdFilm.length;
+
+                this.listFilm = [];
+                this.isPersonShowed = true;
+            }
+
+            getFilm(res) {
+                this.compteur++;
+                let film = res.detail.response;
+                this.listFilm.push(film);
+
+
+
+                if (this.filmNbr == this.compteur) {
+                    this.set('listFilm', this.listFilm.slice());
+                    console.log(this.listFilm);
+                }
+
+            }
+
+            knowMore() {
+               
+                let url = "/films/{{idFilm}}";
+                window.location.href = url;
+            }
+        }
+   
+        customElements.define(MyPerson.is, MyPerson);
+    </script>
+</dom-module>

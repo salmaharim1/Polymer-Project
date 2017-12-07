@@ -1,0 +1,119 @@
+<!-- Load the Polymer.Element base class -->
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<dom-module id="my-film">
+    <!-- Defines the element's style and local DOM -->
+    <template>
+        <style>
+             :host {
+                display: block;
+                padding: 16px;
+            }
+
+            paper-button.green {
+                background-color: var(--paper-blue-200);
+                color: white;
+            }
+
+            paper-button.green[active] {
+                background-color: var(--paper-grey-600);
+            }
+        </style>
+
+        <iron-ajax auto url="https://swapi.co/api/films/{{selectedid}}" handle-as="json" on-response="getFilm">
+        </iron-ajax>
+
+        <template is="dom-if" if="[[isFilmShowed]]">
+           
+            <template is="dom-repeat" items="{{listIdPerson}}" as="idPerson">
+                <iron-ajax auto url="https://swapi.co/api/people/{{idPerson}}" handle-as="json" on-response="getPerson">
+                </iron-ajax>
+            </template>
+        </template>
+
+
+        <h1>MORE DETAILS ABOUT - {{film.title}} -</h1>
+
+        <div>
+            
+<!-- affichage des films avec les bouttons de details-->
+            <table style="width:100%" border="1">
+                    <tr align="center" bgcolor="#9e9b9b">
+                      <td><b> TITLE</td>
+                      <td><b>EPISODE</b></td> 
+                      <td><b>DIRECTOR</b> </td>
+                      <td><b> PRODUCTER</b></td>
+                      <td><b>RELEASE DATE</b> </td>
+                    </tr>
+                    <tr>
+                      <td>  {{film.title}}</td>
+                      <td>{{film.episode_id}}</td>
+                      <td>{{film.director}}</td>
+                      <td>{{film.producer}}</td>
+                     <td>{{film.release_date}}</td>
+                    </tr>
+                   
+                   
+                  </table> <br>
+            
+
+
+        </div>
+    </template>
+    <script>
+        // Your new element extends the Polymer.Element base class
+        class MyFilm extends Polymer.Element {
+            static get is() { return 'my-film'; }
+
+            constructor() {
+                super();
+                this.isFilmShowed = false;
+                this.personNbr = 0;
+                this.listPerson = [];
+                this.listIdPerson = [];
+                this.listUrlPerson = [];
+
+                this.cpt = 0;
+            }
+
+
+            getFilm(res) {
+                this.film = res.detail.response;
+                this.listUrlPerson = res.detail.response.characters;
+                this.listUrlPerson.forEach(function (element) {
+                    let temp = element.substr(element.lastIndexOf('people/') + 7);
+                    let id = temp.substr(0, temp.length - 1);
+                    this.listIdPerson.push(id);
+                }, this);
+
+                this.set('listIdPerson', this.listIdPerson.slice());
+                this.personNbr = this.listIdPerson.length;
+
+                this.listPerson = [];
+                this.isFilmShowed = true;
+            }
+
+            getPerson(res) {
+                this.cpt++;
+                let person = res.detail.response;
+                this.listPerson.push(person);
+
+
+
+                if (this.personNbr == this.cpt) {
+                    this.set('listPerson', this.listPerson.slice());
+                    console.log(this.listPerson);
+                }
+
+            }
+
+            knowMore() {
+                //page('/people/{{idp}}');
+                let url = "/people/{{idPerson}}";
+                window.location.href = url;
+            }
+        }
+        //Now, register your new custom element so the browser can use it
+        customElements.define(MyFilm.is, MyFilm);
+    </script>
+</dom-module>
